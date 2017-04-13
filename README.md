@@ -9,6 +9,10 @@ Steam Inventory API written in Python for the new endpoints
 ## TO-DO
 - Proxies
 
+## Mentions
+sebmorris/Oat for his [steam inventory api for the new endpoint in nodejs](https://github.com/sebmorris/steam-inventory-api/)  
+DoctorMcKay for his [EConItem.js](https://github.com/sebmorris/steam-inventory-api/blob/master/CEconItem.js)
+
 ## Requirements
 See requirements.txt
  
