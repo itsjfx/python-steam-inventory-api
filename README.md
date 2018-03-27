@@ -18,7 +18,7 @@ See requirements.txt
 ## Proxy info
 Needs requests[socks] which will install pysocks to allow proxies to work
 
-For proxies it uses anything python requests supports under its proxies dictionary, using the proxy the user inputs as a http and https proxy
+For proxies it uses anything python requests supports under its proxies dictionary, using the proxy the user inputs as a http and https proxy  
 I have only used and tested socks5 proxies - to use one do proxy="socks5://xxx.xxx.xxx.xxx:12345"
 
 ## Examples
