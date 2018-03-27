@@ -1,20 +1,14 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*
 
 # Steam Inventory API
 # Written by jfx
+# https://github.com/itsjfx/
 
-# Python port of sebmorris/Oat's steam inventory api and port of DoctorMcKay's CEonItem
-# sebmorris/Oat's steam-inventory-api: https://github.com/sebmorris/steam-inventory-api/blob/master/index.js
-# DoctorMcKay's CEonItem: https://github.com/sebmorris/steam-inventory-api/blob/master/CEconItem.js
-# :)
+# Python port of a steam inventory api, inspired by many projects - mainly Oat's nodejs inventory api and Doctor McKay's
+# Made in Python 2.7 but should probably work in later versions if you fix some syntax, one day I'll move on to 3...
+# Code might need a re-write/look at for improvements since it's old, but it does the job.
 
-# TODO:
-# * Proxies
-
-import requests
-import math
-import time
+import requests, math, time
 
 inventory = []
 
@@ -22,24 +16,27 @@ class InventoryAPI:
 
 	def merge_two_dicts(self, x, y):
 		#https://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression
-		"""Given two dicts, merge them into a new dict as a shallow copy."""
+		#Given two dicts, merge them into a new dict as a shallow copy.
 		z = x.copy()
 		z.update(y)
 		return z
 		
-	def __init__(self, steamid, appid, contextid, tradeableOnly=True, proxy=""):
+	def __init__(self, steamid, appid, contextid, tradeableOnly=True, proxy=None):
 		self.steamid = steamid
 		self.appid = appid
 		self.contextid = contextid
 		self.tradeableOnly = tradeableOnly
-		
-		if proxy: # currently not implemented yet
-			self.proxy = proxy
+		self.proxy = proxy
 	
 	def makeRequest(self, lastAssetID=""):
-		headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36"}
-		url = 'http://steamcommunity.com/inventory/'+self.steamid+'/'+self.appid+'/'+self.contextid+'?l=english&count=5000&start_assetid='+lastAssetID
-		req = requests.get(url=url, headers=headers)
+		headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} # not sure if required but might as well
+		url = 'http://steamcommunity.com/inventory/{}/{}/{}?l=english&count=5000&start_assetid={}'.format(self.steamid, self.appid, self.contextid, lastAssetID)
+		# build the proxy, luckily putting None will make it not use a proxy as well
+		proxies = {
+		  'http': self.proxy,
+		  'https': self.proxy
+		}
+		req = requests.get(url=url, headers=headers, proxies=proxies)
 		return req.json() # use in-built requests module for json parsing
 		
 	def linkValues(self, asset, desc): # port of CEconItem.js from DoctorMcKay
@@ -55,11 +52,11 @@ class InventoryAPI:
 			try:
 				data = self.makeRequest(lastAssetID)
 				done = True
-			except:
-				print "Error making request... trying again in 20 seconds."
+			except Exception as e:
+				print "Error making request: {} ... trying again in 20 seconds.".format(e)
 				time.sleep(20)
 		
-		try: # we didn't get a proper response
+		try: # we didn't get a proper response, this may happen if Steam blocks the proxy!!
 			data['assets']
 		except:
 			raise ValueError('Malformed response')

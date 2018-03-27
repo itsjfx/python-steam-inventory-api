@@ -2,29 +2,24 @@
 Steam Inventory API written in Python for the new endpoints
 
 ## Main features
-- Python implementation of Doctor McKay's CEonItem.js
 - Python implementation of requesting inventory data and returning it
 - In-built filter for tradeable or non-tradeable items
+- Proxy support!
 
-## TO-DO
-- Proxies
+## To-do
+- Get tags
 
 ## Mentions
-- sebmorris/Oat for his [steam inventory api for the new endpoint in nodejs](https://github.com/sebmorris/steam-inventory-api/)
-- DoctorMcKay for his [EConItem.js](https://github.com/sebmorris/steam-inventory-api/blob/master/CEconItem.js)
+- Oat/sebmorris and Doctor McKay for their inventory api's which inspired me to write my own and base mine off
 
 ## Requirements
 See requirements.txt
- 
+
+## Proxy info
+Needs requests[socks] which will install pysocks to allow proxies to work
+
+For proxies it uses anything python requests supports under its proxies dictionary, using the proxy the user inputs as a http and https proxy
+I have only used and tested socks5 proxies - to use one do proxy="socks5://xxx.xxx.xxx.xxx:12345"
 
 ## Examples
-```
-from inventoryapi import InventoryAPI
-
-inv = InventoryAPI(steamid='76561197993496553',appid='730',contextid='2',tradeableOnly=True).getItems()
-# inv = InventoryAPI('76561197993496553','730','2',True).getItems() # both are the same thing
-
-print inv[0] # first tradeable item in the inventory (sorted by latest)
-print inv[-1] # last tradeable item in the inventory (to last slot)
-print len(inv) # number of tradeable items in the inventory
-```
+See examples/example.py
