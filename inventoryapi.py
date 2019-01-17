@@ -74,7 +74,6 @@ class InventoryAPI:
 		for descItem in desc:
 			if descItem['classid'] == asset['classid'] and descItem['instanceid'] == asset['instanceid']:
 				return self.merge_two_dicts(asset, descItem)
-				break
 				
 	def execute(self, options, last_assetid=None):
 		data = self.makeRequest(options, last_assetid)
