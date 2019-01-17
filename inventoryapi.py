@@ -82,9 +82,7 @@ class InventoryAPI:
 	def execute(self, options, last_assetid=None):
 		data = self.makeRequest(options, last_assetid)
 		
-		try: # we didn't get a proper response, this may happen if Steam blocks the proxy!!
-			data['assets']
-		except:
+		if not 'assets' in data: # we didn't get a proper response, this may happen if Steam blocks the proxy!!
 			raise InventoryAPIException('Malformed response')
 		
 		for item in data['assets']:
