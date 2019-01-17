@@ -30,17 +30,14 @@ class InventoryAPI:
 			
 		return self.proxies[self.proxyPos]
 		
-	def __init__(self, proxies=None, proxyRepeat=1, timeout=6, debug=False):
+	def __init__(self, proxies=None, proxyRepeat=1, timeout=6):
 		self.inventory = []
 		self.proxies = proxies
 		self.proxyPos = 0
 		self.currProxyRepeat = -1 # -1 or breaks on initial proxy
 		self.proxyRepeat = proxyRepeat
 		self.timeout = timeout
-		self.debug = debug
 		self.logger = logging.getLogger(__name__)
-		if debug:
-			logging.basicConfig(level=logging.DEBUG)
 	
 	def makeRequest(self, options, last_assetid=""):
 		headers = {
@@ -61,7 +58,7 @@ class InventoryAPI:
 			req = requests.get(url=url, headers=headers, proxies=proxies, timeout=self.timeout)
 			return req.json()
 		except Exception as e:
-			self.logger.debug("Error making request: {}".format(e))
+			self.logger.error("Error making request: {}".format(e))
 			if options['retries'] > 0:
 				self.logger.debug("Retrying in {} seconds".format(options['retryDelay']))
 				sleep(options['retryDelay'])
