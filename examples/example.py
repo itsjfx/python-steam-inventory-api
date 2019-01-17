@@ -31,8 +31,6 @@ inv = inventoryApi.get(
 	'753', # eg: '753'
 	'6', # eg: '6'
 	True, # Filters tradable items (default: True)
-	retries = 5, # Max number of retries on current inventory request before throwing (default: 5)
-	retryDelay = 1000, # The delay between retrys, not normal requests (default: 1000)
 )
 
 # print(inv[0]) # first tradable item in the inventory (sorted by latest)
