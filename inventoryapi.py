@@ -1,82 +1,121 @@
-# -*- coding: utf-8 -*
-
 # Steam Inventory API
 # Written by jfx
-# https://github.com/itsjfx/
+# https://jfx.ac
+# https://github.com/itsjfx/python-steam-inventory-api/
 
-# Python port of a steam inventory api, inspired by many projects - mainly Oat's nodejs inventory api and Doctor McKay's
-# Made in Python 2.7 but should probably work in later versions if you fix some syntax, one day I'll move on to 3...
-# Code might need a re-write/look at for improvements since it's old, but it does the job.
+import requests, logging
+from time import sleep
 
-import requests, math, time
-
-inventory = []
-
+class InventoryAPIException(Exception):
+    pass
+	
 class InventoryAPI:
-
 	def merge_two_dicts(self, x, y):
-		#https://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression
-		#Given two dicts, merge them into a new dict as a shallow copy.
 		z = x.copy()
 		z.update(y)
 		return z
 		
-	def __init__(self, steamid, appid, contextid, tradeableOnly=True, proxy=None):
-		self.steamid = steamid
-		self.appid = appid
-		self.contextid = contextid
-		self.tradeableOnly = tradeableOnly
-		self.proxy = proxy
+	def proxy(self):
+		if not self.proxies:
+			return None
 	
-	def makeRequest(self, lastAssetID=""):
-		headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"} # not sure if required but might as well
-		url = 'http://steamcommunity.com/inventory/{}/{}/{}?l=english&count=5000&start_assetid={}'.format(self.steamid, self.appid, self.contextid, lastAssetID)
-		# build the proxy, luckily putting None will make it not use a proxy as well
-		proxies = {
-		  'http': self.proxy,
-		  'https': self.proxy
-		}
-		req = requests.get(url=url, headers=headers, proxies=proxies)
-		return req.json() # use in-built requests module for json parsing
+		if (self.currProxyRepeat < self.proxyRepeat): # We can keep using this one
+			self.currProxyRepeat = self.currProxyRepeat + 1
+		else: # Cycle through the proxies
+			self.currProxyRepeat = 0
+			if (self.proxyPos == len(self.proxies) - 1):
+				self.proxyPos = 0
+			else:
+				self.proxyPos = self.proxyPos + 1
+			
+		return self.proxies[self.proxyPos]
 		
-	def linkValues(self, asset, desc): # port of CEconItem.js from DoctorMcKay
+	def __init__(self, proxies=None, proxyRepeat=1, timeout=6, debug=False):
+		self.inventory = []
+		self.proxies = proxies
+		self.proxyPos = 0
+		self.currProxyRepeat = -1 # -1 or breaks on initial proxy
+		self.proxyRepeat = proxyRepeat
+		self.timeout = timeout
+		self.debug = debug
+		self.logger = logging.getLogger(__name__)
+		if debug:
+			logging.basicConfig(level=logging.DEBUG)
+	
+	def makeRequest(self, options, last_assetid=""):
+		headers = {
+			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+			"referer": "https://steamcommunity.com/profiles/{}/inventory".format(options['steamid'])
+		}
+		url = 'https://steamcommunity.com/inventory/{}/{}/{}?l={}&count={}&start_assetid={}'.format(options['steamid'], options['appid'], options['contextid'], options['language'], options['count'], last_assetid)
+		
+		proxy = self.proxy()
+		proxies = {
+		  'http': proxy,
+		  'https': proxy
+		}
+		
+		self.logger.debug("Requesting. Start {}, Proxy {}, Retries {}, Items {}".format(last_assetid, proxies, options['retries'], len(self.inventory)))
+		
+		try:
+			req = requests.get(url=url, headers=headers, proxies=proxies, timeout=self.timeout)
+			return req.json()
+		except Exception as e:
+			self.logger.debug("Error making request: {}".format(e))
+			if options['retries'] > 0:
+				self.logger.debug("Retrying in {} seconds".format(options['retryDelay']))
+				sleep(options['retryDelay'])
+				options['retries'] = options['retries'] - 1
+				if self.proxies:
+					self.logger.debug("Force cycling proxy")
+					self.currProxyRepeat = self.proxyRepeat # Force the proxies to rotate so we don't repeat the same one on our retry, as it may be temporarily available
+				return self.makeRequest(options, last_assetid)
+			else:
+				raise InventoryAPIException("Out of retries")
+		
+	def linkValues(self, asset, desc):
 		for descItem in desc:
 			if descItem['classid'] == asset['classid'] and descItem['instanceid'] == asset['instanceid']:
 				return self.merge_two_dicts(asset, descItem)
 				break
-	
-	def execute(self, lastAssetID=""):
-		# check to see if request went through
-		done = False
-		while not done:
-			try:
-				data = self.makeRequest(lastAssetID)
-				done = True
-			except Exception as e:
-				print "Error making request: {} ... trying again in 20 seconds.".format(e)
-				time.sleep(20)
+				
+	def execute(self, options, last_assetid=None):
+		data = self.makeRequest(options, last_assetid)
 		
 		try: # we didn't get a proper response, this may happen if Steam blocks the proxy!!
 			data['assets']
 		except:
-			raise ValueError('Malformed response')
+			raise InventoryAPIException('Malformed response')
 		
 		for item in data['assets']:
 			generatedItem = self.linkValues(item, data['descriptions'])
-			if self.tradeableOnly and generatedItem['tradable'] == 1:
-				inventory.append(generatedItem)
-			elif not self.tradeableOnly:
-				inventory.append(generatedItem)
-		return data
-	
-	def getItems(self):
-		data = self.execute()
 			
-		if data['total_inventory_count'] > 5000 and data['last_assetid']: # if the inv is over 5000 items long then we need to send more requests with the last assetid
-			for i in range(0, int(math.ceil(data['total_inventory_count'] / 5000))):
-				try: # check if the request has the last_assetid, if it does keep going
-					data['last_assetid'] = self.execute(data['last_assetid'])['last_assetid']
-				except:
-					pass
-					break
-		return inventory
+			# Make them True or False instead of 0 or 1
+			generatedItem['currency'] = not not generatedItem['currency']
+			generatedItem['tradable'] = not not generatedItem['tradable']
+			generatedItem['marketable'] = not not generatedItem['marketable']
+			generatedItem['commodity'] = not not generatedItem['commodity']
+			
+			if (options['tradable'] and generatedItem['tradable']) or not options['tradable']:
+				self.inventory.append(generatedItem)
+		
+		if 'more_items' in data:
+			return self.execute(options, data['last_assetid'])
+		else:
+			return self.inventory
+	
+	def get(self, steamid, appid, contextid, tradable=True, retries=5, retryDelay=1000, language='english', count=5000):	
+		self.inventory = []
+		
+		options = {
+			"steamid": steamid,
+			"appid": appid,
+			"contextid": contextid,
+			"count": count,
+			"language": language,
+			"tradable": tradable,
+			"retries": retries,
+			"retryDelay": retryDelay/1000.0
+		}
+		
+		return self.execute(options, None)
