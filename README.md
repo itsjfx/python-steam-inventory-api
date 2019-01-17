@@ -9,6 +9,15 @@ Steam Inventory API written in Python for the new endpoints
 - Retries and customisable values for retry (retry delay, number of retries)
 - Optional debug logging
 
+## Changes from before
+- Syntax is different, please look at example.py and adjust accordingly!
+- Proxies are now in a list and get cycled, unlike before where you could only have 1 proxy
+- Retries added
+- Timeout param added
+- count/language options added
+- Optional debug mode added
+- Now fully supports Python 2 & 3
+
 ## Mentions
 - Oat/sebmorris and Doctor McKay for their inventory api's which inspired me to write my own and base mine off, especially Seb's
 
