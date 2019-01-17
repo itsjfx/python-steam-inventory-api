@@ -10,7 +10,6 @@ inventoryApi = InventoryAPI(
 	],
 	proxyRepeat = 1, # How many times we will reuse a proxy, meaning we will use a proxy 2 times if value is 1 (default: 1)
 	timeout = 6, # How long until the request timeout is reached/no bytes received in seconds (default: 6)
-	#debug = True # Enables advanced logging to debug request issues, needs logging setup to see (default: True)
 )
 
 logging.basicConfig(level=logging.DEBUG) # Allows us to see the debugging, here purely for the example, if a request fails it is logged as ERROR
