@@ -1,5 +1,8 @@
-from __future__ import print_function
+# Import logic so that the inventoryapi module can be imported from up one directory without creating a package
+from os import sys, path
+sys.path.append(path.join(path.dirname(__file__), '..'))
 from inventoryapi import InventoryAPI
+
 import logging # for debug
 
 # Init our Inventory API
