@@ -11,7 +11,7 @@ inventoryApi = InventoryAPI(
 		'socks5://xxx:xxx@xxx.xxx.xxx.xxx:1234',
 		'http://xxx:xxx@xxx.xxx.xxx.xxx:1234'
 	],
-	proxyRepeat = 1, # How many times we will reuse a proxy, meaning we will use a proxy 2 times if value is 1 (default: 1)
+	proxy_repeat = 1, # How many times we will reuse a proxy, meaning we will use a proxy 2 times if value is 1 (default: 1)
 	timeout = 6, # How long until the request timeout is reached/no bytes received in seconds (default: 6)
 )
 
@@ -23,7 +23,7 @@ inv = inventoryApi.get(
 	contextid = '6', # eg: '6'
 	tradable = True, # Filters tradable items (default: True)
 	retries = 5, # Max number of retries on current inventory request before throwing (default: 5)
-	retryDelay = 1000, # The delay between retrys, not normal requests (default: 1000)
+	retry_delay = 1000, # The delay between retrys, not normal requests (default: 1000)
 	language = 'english', # (default: english)
 	count = 5000, # How many items to load per request, maximum is 5000 (default: 5000)
 )
