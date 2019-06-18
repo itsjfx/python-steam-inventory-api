@@ -1,8 +1,3 @@
-# Steam Inventory API
-# Written by jfx
-# https://jfx.ac
-# https://github.com/itsjfx/python-steam-inventory-api/
-
 import requests, logging
 from time import sleep
 
